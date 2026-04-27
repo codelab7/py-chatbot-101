@@ -6,9 +6,10 @@
 
 # command 
 
-- cd (projectname)
-- source venv/bin/activate
-- pip list
-- pip install fastapi uvicorn
-- nano s.py(file name)
-- uvicorn s:app --reload (filename(s))
+- `cd ~/(projectname)`
+- `source venv/bin/activate`
+- `pip list`
+- `pip install fastapi uvicorn`
+- `nano s.py(file name)`
+- `uvicorn s:app --reload (filename(s))`
+
