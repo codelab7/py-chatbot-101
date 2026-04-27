@@ -12,3 +12,4 @@ def chat(msg: Msg):
         return {"response": "pong"}
     else:
         return {"response": "please type ping"}
+#hello
