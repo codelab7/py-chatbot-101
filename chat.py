@@ -8,9 +8,6 @@ import bcrypt
 import jwt
 import os
 
-# ─────────────────────────────────────────────
-#  App Setup
-# ─────────────────────────────────────────────
 app = FastAPI(title="Auth API", description="Register, Login & JWT Token API", version="1.0.0")
 
 app.add_middleware(
@@ -22,9 +19,6 @@ app.add_middleware(
 
 security = HTTPBearer()
 
-# ─────────────────────────────────────────────
-#  Config
-# ─────────────────────────────────────────────
 SECRET_KEY = "108!@#$%^&Asut"
 ALGORITHM  = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -35,6 +29,29 @@ DB_CONFIG = {
     "password": "108@#$",
     "database": "auth_db",
 }
+
+# ─────────────────────────────────────────────
+#  Default Bot Responses
+# ─────────────────────────────────────────────
+DEFAULT_RESPONSES = {
+    "hi": "Hello! How can I help you today? 😊",
+    "hello": "Hey there! What can I do for you? 👋",
+    "how are you": "I'm doing great! Thanks for asking. How about you? 😄"
+    
+}
+
+DEFAULT_FALLBACK = "That's an interesting question! I'm still learning. Can you ask me something else? 🤔"
+
+def get_bot_response(message: str) -> str:
+    msg = message.lower().strip()
+    # Exact match
+    if msg in DEFAULT_RESPONSES:
+        return DEFAULT_RESPONSES[msg]
+    # Partial match
+    for key, response in DEFAULT_RESPONSES.items():
+        if key in msg:
+            return response
+    return DEFAULT_FALLBACK
 
 # ─────────────────────────────────────────────
 #  Database
@@ -56,7 +73,6 @@ def init_db():
     cur.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
     cur.execute(f"USE {DB_CONFIG['database']}")
 
-    # Users table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,7 +83,6 @@ def init_db():
         )
     """)
 
-    # Chats table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS chats (
             id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,7 +93,6 @@ def init_db():
         )
     """)
 
-    # Messages table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS messages (
             id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -138,13 +152,11 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 # ─────────────────────────────────────────────
 #  Routes
 # ─────────────────────────────────────────────
-
 @app.get("/")
 def root():
     return {"message": "Auth API is running 🚀"}
 
-
-# ── REGISTER ──────────────────────────────────
+# ── REGISTER ──
 @app.post("/api/register", status_code=status.HTTP_201_CREATED)
 def register(body: RegisterRequest, db=Depends(get_db)):
     cur = db.cursor(dictionary=True)
@@ -159,17 +171,32 @@ def register(body: RegisterRequest, db=Depends(get_db)):
     )
     db.commit()
     user_id = cur.lastrowid
+
+    # Register થતાં જ નવો Chat automatically બનાવો
+    cur.execute("INSERT INTO chats (user_id, title) VALUES (%s, %s)", (user_id, "My First Chat"))
+    db.commit()
+    chat_id = cur.lastrowid
+
+    # Default welcome message save કરો
+    welcome = "Welcome! I'm AstraBot 🤖 Ask me anything!"
+    cur.execute(
+        "INSERT INTO messages (chat_id, user_id, role, message) VALUES (%s, %s, %s, %s)",
+        (chat_id, user_id, "bot", welcome)
+    )
+    db.commit()
+
     token = create_access_token({"sub": str(user_id), "email": body.email})
 
     return {
         "message": "User registered successfully",
         "user": {"id": user_id, "name": body.name, "email": body.email},
+        "chat": {"id": chat_id, "title": "My First Chat"},
+        "bot_welcome": welcome,
         "access_token": token,
         "token_type": "bearer",
     }
 
-
-# ── LOGIN ──────────────────────────────────────
+# ── LOGIN ──
 @app.post("/api/login")
 def login(body: LoginRequest, db=Depends(get_db)):
     cur = db.cursor(dictionary=True)
@@ -181,17 +208,21 @@ def login(body: LoginRequest, db=Depends(get_db)):
     if not bcrypt.checkpw(body.password.encode(), user["password"].encode()):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
+    # Login થતાં જ user નો પહેલો chat fetch કરો
+    cur.execute("SELECT id, title FROM chats WHERE user_id = %s ORDER BY created_at ASC LIMIT 1", (user["id"],))
+    chat = cur.fetchone()
+
     token = create_access_token({"sub": str(user["id"]), "email": user["email"]})
 
     return {
         "message": "Login successful",
         "user": {"id": user["id"], "name": user["name"], "email": user["email"]},
+        "chat": chat,
         "access_token": token,
         "token_type": "bearer",
     }
 
-
-# ── ME ─────────────────────────────────────────
+# ── ME ──
 @app.get("/api/me")
 def get_me(credentials: HTTPAuthorizationCredentials = Depends(security), db=Depends(get_db)):
     payload = verify_token(credentials.credentials)
@@ -203,12 +234,9 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(security), db=Dep
         raise HTTPException(status_code=404, detail="User not found")
     return {"user": user}
 
-
 # ─────────────────────────────────────────────
 #  Chat APIs
 # ─────────────────────────────────────────────
-
-# ── નવો Chat બનાવો ──
 @app.post("/api/chats", status_code=status.HTTP_201_CREATED)
 def create_chat(body: CreateChatRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -221,8 +249,6 @@ def create_chat(body: CreateChatRequest, current_user=Depends(get_current_user),
         "chat": {"id": chat_id, "title": body.title, "user_id": user_id}
     }
 
-
-# ── બધા Chats જુઓ ──
 @app.get("/api/chats")
 def get_chats(current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -237,8 +263,6 @@ def get_chats(current_user=Depends(get_current_user), db=Depends(get_db)):
     """, (user_id,))
     return {"chats": cur.fetchall()}
 
-
-# ── Single Chat જુઓ ──
 @app.get("/api/chats/{chat_id}")
 def get_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -249,8 +273,6 @@ def get_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends(ge
         raise HTTPException(status_code=404, detail="Chat not found")
     return {"chat": chat}
 
-
-# ── Chat Delete કરો ──
 @app.delete("/api/chats/{chat_id}")
 def delete_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -263,37 +285,56 @@ def delete_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends
     db.commit()
     return {"message": "Chat deleted successfully"}
 
-
 # ─────────────────────────────────────────────
 #  Message APIs
 # ─────────────────────────────────────────────
 
-# ── Message મોકલો ──
+# ── Message મોકલો + Bot નો Reply ──
 @app.post("/api/chats/{chat_id}/messages", status_code=status.HTTP_201_CREATED)
 def send_message(chat_id: int, body: SendMessageRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
     cur = db.cursor(dictionary=True)
+
+    # Chat exist?
     cur.execute("SELECT id FROM chats WHERE id = %s AND user_id = %s", (chat_id, user_id))
     if not cur.fetchone():
         raise HTTPException(status_code=404, detail="Chat not found")
+
+    # User message save
     cur.execute(
         "INSERT INTO messages (chat_id, user_id, role, message) VALUES (%s, %s, %s, %s)",
         (chat_id, user_id, "user", body.message)
     )
     db.commit()
-    message_id = cur.lastrowid
+    user_message_id = cur.lastrowid
+
+    # Bot response generate
+    bot_reply = get_bot_response(body.message)
+
+    # Bot message save
+    cur.execute(
+        "INSERT INTO messages (chat_id, user_id, role, message) VALUES (%s, %s, %s, %s)",
+        (chat_id, user_id, "bot", bot_reply)
+    )
+    db.commit()
+    bot_message_id = cur.lastrowid
+
     return {
         "message": "Message sent successfully",
-        "data": {
-            "message_id": message_id,
+        "user_message": {
+            "message_id": user_message_id,
             "chat_id": chat_id,
             "role": "user",
             "message": body.message,
+        },
+        "bot_response": {
+            "message_id": bot_message_id,
+            "chat_id": chat_id,
+            "role": "bot",
+            "message": bot_reply,
         }
     }
 
-
-# ── બધા Messages જુઓ ──
 @app.get("/api/chats/{chat_id}/messages")
 def get_messages(chat_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -308,8 +349,6 @@ def get_messages(chat_id: int, current_user=Depends(get_current_user), db=Depend
     messages = cur.fetchall()
     return {"chat_id": chat_id, "total_messages": len(messages), "messages": messages}
 
-
-# ── Message Delete કરો ──
 @app.delete("/api/chats/{chat_id}/messages/{message_id}")
 def delete_message(chat_id: int, message_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])

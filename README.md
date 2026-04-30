@@ -13,3 +13,24 @@
 - `nano s.py(file name)`
 - `uvicorn s:app --reload (filename(s))`
 
+# Database
+
+mysql -u root -p
+ 
+- Password : 108@#$
+
+database name : auth_db;
+
+database show  : SHOW database;
+
+table : SHOW table;
+
+show table : select * from user;
+
+
+Gemini : AIzaSyCEmdgQd6FgAgQEbNZi1gNg1NI2t77ukYU
+
+
+
+
+
