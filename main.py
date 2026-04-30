@@ -27,7 +27,7 @@ security = HTTPBearer()
 # ─────────────────────────────────────────────
 SECRET_KEY = "108!@#$%^&Asut"
 ALGORITHM  = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 90
 
 DB_CONFIG = {
     "host":     "localhost",
