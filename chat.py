@@ -289,7 +289,7 @@ def delete_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends
 #  Message APIs
 # ─────────────────────────────────────────────
 
-# ── Message મોકલો + Bot નો Reply ──
+# Message + Bot
 @app.post("/api/chats/{chat_id}/messages", status_code=status.HTTP_201_CREATED)
 def send_message(chat_id: int, body: SendMessageRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])

@@ -208,7 +208,7 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(security), db=Dep
 #  Chat APIs
 # ─────────────────────────────────────────────
 
-# ── નવો Chat બનાવો ──
+# New Chat 
 @app.post("/api/chats", status_code=status.HTTP_201_CREATED)
 def create_chat(body: CreateChatRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -222,7 +222,7 @@ def create_chat(body: CreateChatRequest, current_user=Depends(get_current_user),
     }
 
 
-# ── બધા Chats જુઓ ──
+# Chats 
 @app.get("/api/chats")
 def get_chats(current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -238,7 +238,7 @@ def get_chats(current_user=Depends(get_current_user), db=Depends(get_db)):
     return {"chats": cur.fetchall()}
 
 
-# ── Single Chat જુઓ ──
+# Single Chat
 @app.get("/api/chats/{chat_id}")
 def get_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -250,7 +250,7 @@ def get_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends(ge
     return {"chat": chat}
 
 
-# ── Chat Delete કરો ──
+#  Chat Delete 
 @app.delete("/api/chats/{chat_id}")
 def delete_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -268,7 +268,7 @@ def delete_chat(chat_id: int, current_user=Depends(get_current_user), db=Depends
 #  Message APIs
 # ─────────────────────────────────────────────
 
-# ── Message મોકલો ──
+# Send Message
 @app.post("/api/chats/{chat_id}/messages", status_code=status.HTTP_201_CREATED)
 def send_message(chat_id: int, body: SendMessageRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -293,7 +293,7 @@ def send_message(chat_id: int, body: SendMessageRequest, current_user=Depends(ge
     }
 
 
-# ── બધા Messages જુઓ ──
+# Show Messages 
 @app.get("/api/chats/{chat_id}/messages")
 def get_messages(chat_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])
@@ -309,7 +309,7 @@ def get_messages(chat_id: int, current_user=Depends(get_current_user), db=Depend
     return {"chat_id": chat_id, "total_messages": len(messages), "messages": messages}
 
 
-# ── Message Delete કરો ──
+# Message Delete
 @app.delete("/api/chats/{chat_id}/messages/{message_id}")
 def delete_message(chat_id: int, message_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     user_id = int(current_user["sub"])

@@ -28,8 +28,6 @@ table : SHOW table;
 show table : select * from user;
 
 
-Gemini : AIzaSyCEmdgQd6FgAgQEbNZi1gNg1NI2t77ukYU
-
 
 
 
