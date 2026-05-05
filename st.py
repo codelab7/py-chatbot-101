@@ -26,7 +26,7 @@ ALGORITHM  = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 90
 
 OLLAMA_URL   = "http://localhost:11434/api/chat"
-OLLAMA_MODEL = "llama3.2:latest"
+OLLAMA_MODEL = "gemma:2b"
 
 DB_CONFIG = {
     "host":     "localhost",
@@ -63,6 +63,10 @@ SYSTEM_PROMPT = {
     )
 }
 
+# SYSTEM_PROMPT = {
+#     "role": "system",
+#     "content": "You are a fast coding assistant. Give clear and short answers with examples."
+# }
 # ─────────────────────────────────────────────
 #  Database
 # ─────────────────────────────────────────────
@@ -176,7 +180,7 @@ def build_messages(history: list) -> list:
 # ─────────────────────────────────────────────
 async def get_ai_response(history: list) -> str:
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=10.0, read=180.0, write=10.0, pool=5.0)) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(300.0)) as client:
             response = await client.post(
                 OLLAMA_URL,
                 json={"model": OLLAMA_MODEL, "messages": build_messages(history), "stream": False}
@@ -215,12 +219,20 @@ async def get_ai_response(history: list) -> str:
 #  ✅ Stream generator
 # ─────────────────────────────────────────────
 async def stream_ai_response(history: list):
+    received_any = False
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(300.0)) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=10.0, read=120.0, write=10.0,pool=10.0)) as client:
             async with client.stream(
                 "POST",
                 OLLAMA_URL,
-                json={"model": OLLAMA_MODEL, "messages": build_messages(history), "stream": True},
+                json={"model": OLLAMA_MODEL, "messages": build_messages(history), "stream": True,
+        #                "options": {
+        # "num_predict": 120,
+        # "temperature": 0.3,
+        # "top_k": 20,
+        # "top_p": 0.9
+                # }
+                      },
             ) as response:
 
                 if response.status_code != 200:
@@ -228,7 +240,7 @@ async def stream_ai_response(history: list):
                     yield f"\n[OLLAMA ERROR]: {error_text.decode()}"
                     return
 
-                received_any = False
+              
 
                 async for line in response.aiter_lines():
                     if not line:
