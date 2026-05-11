@@ -28,6 +28,13 @@ table : SHOW table;
 show table : select * from user;
 
 
+# Jupyter notebook
+
+- source myenv/bin/activate
+-  jupyter lab
+
+
+
 
 
 
