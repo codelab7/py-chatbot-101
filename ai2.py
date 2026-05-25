@@ -61,7 +61,7 @@ async def get_ai_response(user_message: str, history: list) -> str:
                 timeout=60,
             )
 
-        if response.status_code == 200:
+        if response.status_code == 200: 
             return response.json()["message"]["content"]
         else:
             print(f"Ollama Error: {response.text}")
