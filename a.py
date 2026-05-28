@@ -34,18 +34,30 @@ async def analyze_sentiment(input_data: TextInput):
     
     try:
         # મોડેલ દ્વારા પ્રિડિક્શન કરો
-        prediction = classifier(input_data.text)[0]
+        predictions = classifier(input_data.text)
+        
+        # અહીં ચેક કરો કે આઉટપુટ લિસ્ટ છે અને તે ખાલી નથી
+        if isinstance(predictions, list) and len(predictions) > 0:
+            prediction = predictions[0]
+        else:
+            prediction = predictions
+
+        # સેફ્ટી ચેક: જો કોઈ કારણસર હજુ પણ ડિક્શનરી ન હોય
+        if not isinstance(prediction, dict):
+            raise ValueError("મોડેલનું આઉટપુટ યોગ્ય ફોર્મેટમાં નથી.")
         
         # ક્લીન JSON રિસ્પોન્સ રિટર્ન કરો
         return {
             "status": "success",
             "input_text": input_data.text,
             "result": {
-                "label": prediction["label"],          # POSITIVE અથવા NEGATIVE
-                "confidence_score": round(prediction["score"], 4) # મોડેલનો આત્મવિશ્વાસ (ટકાવારીમાં)
+                "label": prediction.get("label"),  # ડાયરેક્ટ બ્રેકેટના બદલે .get() વાપરવું વધુ સેફ છે
+                "confidence_score": round(prediction.get("score", 0), 4)
             }
         }
     except Exception as e:
+        # અહીં str(e) ની જગ્યાએ પૂરી વિગત પ્રિન્ટ થશે જેથી ટર્મિનલમાં સાચી ખબર પડે
+        print(f"Error details: {e}") 
         raise HTTPException(status_code=500, detail=f"પ્રોસેસિંગમાં ભૂલ આવી: {str(e)}")
 
 # 5. હેલ્થ ચેક એન્ડપોઇન્ટ
