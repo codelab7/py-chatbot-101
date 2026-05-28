@@ -25,7 +25,7 @@ SECRET_KEY = "108!@#$%^&Asuttariya_Astha"
 ALGORITHM  = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 90
 
-OLLAMA_URL   = "http://localhost:11434/api/chat"
+OLLAMA_URL   = "http://localhost:11434/api/chat"    
 OLLAMA_MODEL = "gemma:2b"
 
 DB_CONFIG = {
@@ -346,7 +346,7 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
     user_id = payload.get("sub")
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
-    try:
+    try:    
         cur.execute("SELECT id, name, email, created_at FROM users WHERE id = %s", (user_id,))
         user = cur.fetchone()
         if not user:
