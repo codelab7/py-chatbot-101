@@ -18,7 +18,7 @@ except Exception as e:
     classifier = None
 
 # 3. યુઝર ઇનપુટ માટે Pydantic મોડેલ વ્યાખ્યાયિત કરો
-class TextInput(BaseModel):
+class TextInput(BaseModel): 
     text: str
 
 # 4. API એન્ડપોઇન્ટ (POST Request)
