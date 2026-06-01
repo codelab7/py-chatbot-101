@@ -1,0 +1,14 @@
+{
+    "1. Vague Prompt": {
+        "prompt": "Write a product description for this: Eco-Friendly Bamboo Water Bottle, 750ml, keeps water cold for 12 hours, stainless steel interior.",
+        "output": "[AI Response for 1. Vague Prompt]"
+    },
+    "2. Clear Prompt": {
+        "prompt": "Write a short and catchy product description (2-3 sentences) for an e-commerce website based on these details: Eco-Friendly Bamboo Water Bottle, 750ml, keeps water cold for 12 hours, stainless steel interior.. Focus on health and environment benefits.",
+        "output": "[AI Response for 2. Clear Prompt]"
+    },
+    "3. Strong Prompt": {
+        "prompt": "\nSystem: You are an expert e-commerce copywriter who writes high-converting, punchy product descriptions.\n\nTask: Write a product description based on the provided details. Follow the style of the example below.\n\nExample Input: Smart LED Bulb, Wi-Fi enabled, 16 million colors, works with Alexa.\nExample Output: \n- **Headline**: Light Up Your Life, Your Way!\n- **Description**: Experience ultimate convenience with our Smart LED Bulb. Choose from 16 million colors and control your ambiance with simple voice commands via Alexa.\n- **Key Feature**: Smart Wi-Fi Integration.\n\nCurrent Input: Eco-Friendly Bamboo Water Bottle, 750ml, keeps water cold for 12 hours, stainless steel interior.\nOutput Format:\n- **Headline**: [Catchy Headline]\n- **Description**: [2 sentences description]\n- **Key Feature**: [Main Benefit]\n",
+        "output": "[AI Response for 3. Strong Prompt]"
+    }
+}
